@@ -1,0 +1,14 @@
+agno
+groq
+sqlalchemy
+fastapi
+ddgs
+uvicorn
+transformers 
+torch 
+accelerate
+openinference-instrumentation-agno
+lancedb
+tantivy
+dotenv
+fastmcp
