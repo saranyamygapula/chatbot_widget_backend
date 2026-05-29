@@ -5,14 +5,11 @@ from agno.knowledge.chunking.row import RowChunking
 from agno.knowledge.embedder.sentence_transformer import SentenceTransformerEmbedder
 from agno.knowledge.knowledge import Knowledge
 from agno.knowledge.reader.json_reader import JSONReader
-from agno.tools.mcp import MCPTools
 from agno.vectordb.pgvector import PgVector
 from agno.vectordb.search import SearchType
 from dotenv import load_dotenv
 
 load_dotenv()
-
-mcp_tools = MCPTools(transport="streamable-http", url=os.getenv("MCP_URL") + "/mcp")
 
 embedder = SentenceTransformerEmbedder(
     id=os.getenv(
@@ -24,7 +21,7 @@ embedder = SentenceTransformerEmbedder(
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 vector_db = PgVector(
-    table_name="ca_docs",
+    table_name="cnc_dataset",
     db_url=DATABASE_URL,
     embedder=embedder,
     search_type=SearchType.hybrid,
@@ -32,12 +29,15 @@ vector_db = PgVector(
 
 knowledge = Knowledge(vector_db=vector_db)
 
+# Paste a fresh signed URL from Supabase Storage here — no spaces or line breaks
+DATASET_URL = os.getenv("DATASET_URL")  # recommended: put it in .env
+
 
 async def main():
-    print("Starting JSONL ingestion...")
+    print("Starting JSON ingestion...")
 
     await knowledge.ainsert(
-        url="https://famfqniodyyripuxthsv.supabase.co/storage/v1/object/public/ca-assistant/train.json",
+        url=DATASET_URL,
         reader=JSONReader(
             chunking_strategy=RowChunking(),
         ),

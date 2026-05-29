@@ -7,7 +7,7 @@ import httpx
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from agents.ca_agent import CaAgent
+from agents.cnc_agent import CNCAgent
 from core.htil_handler import handle_purchase_resume
 from core.run_store import RUN_STORE
 from models.Model import ChatRequest, ResumeRequest
@@ -128,8 +128,8 @@ agno_router = APIRouter()
 # --------------------------------------------------
 # Agent Imports
 # --------------------------------------------------
-# from agents.ca_agent import CaAgent
-# Assume CaAgent is already defined
+# from agents.cnc_agent import CNCAgent
+# Assume CNCAgent is already defined
 
 # --------------------------------------------------
 # Request Models
@@ -218,7 +218,7 @@ async def start_chat(request: ChatRequest):
         # 1. Create async task for agent run
         # -----------------------------------
 
-        task = asyncio.create_task(CaAgent.arun(input=request.user_input, user_id=""))
+        task = asyncio.create_task(CNCAgent.arun(input=request.user_input, user_id=""))
 
         # -----------------------------------
         # 2. Wait for agent result
@@ -394,7 +394,7 @@ async def resume_chat(request: ResumeRequest):
     te.confirmed = True
     te.confirmation_note = "Approved via API"
 
-    final = CaAgent.acontinue_run(run_response=run)
+    final = CNCAgent.acontinue_run(run_response=run)
 
     del RUN_STORE[request.run_id]
 
