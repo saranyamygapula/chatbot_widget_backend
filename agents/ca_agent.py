@@ -1,18 +1,18 @@
 import os
 
 from agno.agent import Agent
+from agno.db.postgres import PostgresDb
 from agno.knowledge.embedder.sentence_transformer import SentenceTransformerEmbedder
 from agno.knowledge.knowledge import Knowledge
 from agno.models.groq import Groq
 from agno.os import AgentOS
 from agno.tools.mcp import MCPTools
-from agno.vectordb.lancedb import LanceDb
-from agno.vectordb.search import SearchType
+from agno.vectordb.pgvector import PgVector, SearchType
 from dotenv import load_dotenv
 
 load_dotenv()
 
-mcp_tools = MCPTools(transport="streamable-http", url="http://localhost:3333/mcp")
+mcp_tools = MCPTools(transport="streamable-http", url=os.getenv("MCP_URL") + "/mcp")
 
 embedder = SentenceTransformerEmbedder(
     id=os.getenv(
@@ -21,12 +21,21 @@ embedder = SentenceTransformerEmbedder(
     )
 )
 
-vector_db = LanceDb(
-    table_name="ca_docs",
-    uri="./lancedb",
-    search_type=SearchType.vector,
-    embedder=embedder,
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg://postgres.famfqniodyyripuxthsv:J2fztK65Ar3o9zhF@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres",  # fallback
 )
+
+
+vector_db = PgVector(
+    table_name="ca_docs",
+    db_url=DATABASE_URL,
+    embedder=embedder,
+    search_type=SearchType.hybrid,
+)
+
+db = PostgresDb(db_url=DATABASE_URL, db_schema="ai", session_table="chat_history")
 
 knowledge = Knowledge(vector_db=vector_db)
 
@@ -38,6 +47,7 @@ CaAgent = Agent(
             "meta-llama/llama-4-scout-17b-16e-instruct",  # fallback
         )
     ),
+    db=db,
     name="CA Assistant",
     description="""
 A professional Chartered Accountant (CA) assistant specialized in:
@@ -71,6 +81,7 @@ A professional Chartered Accountant (CA) assistant specialized in:
     knowledge=knowledge,
     search_knowledge=True,
     debug_mode=True,
+    read_chat_history=True,
     # tools=[send_email],
     tools=[mcp_tools],
 )

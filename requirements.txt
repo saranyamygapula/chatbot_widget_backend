@@ -12,3 +12,5 @@ lancedb
 tantivy
 dotenv
 fastmcp
+psycopg[binary]
+pgvector
